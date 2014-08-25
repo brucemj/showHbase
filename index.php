@@ -150,7 +150,7 @@ if ( "$tsUrl" == "$rawkTs" ){
 	if($debugTs) echo "4: start find mcontert in HtmlParser---".microtime_float()."<br>";
 	$pNum = 0;
 	echo "<a name='tips'><table border='1' bgcolor='PaleGreen'><tr><td>";
-	while( $p_mcontent = $html_dom -> find('div#mcontent p',$pNum) ){
+	while( $p_mcontent = $html_dom -> find('div#mcontent',$pNum) ){
 		//echo var_dump($p_mcontent->getPlainText());
 		//echo "<p>".iconv("UTF-8", "GB2312", $p_mcontent->getPlainText())."</p>";
 		echo "<p>".$p_mcontent->getPlainText()."</p>";
