@@ -1,8 +1,8 @@
 <?php  
 //header("Content-Type: text/html; charset=gb2312");
 header("Content-Type: text/html; charset=utf-8");
-
-echo microtime_float()."<br>";
+$debugTs = true;
+if($debugTs) echo microtime_float()."<br>";
 ini_set('display_errors', E_ALL);  
 $GLOBALS['THRIFT_ROOT'] = './libs';  
   
@@ -28,7 +28,6 @@ $limit = 10;
 $queryKey = "title:专业";
 $tsUrl = isset($_GET['ts']) ? $_GET['ts'] : false;  
 $solr = new Apache_Solr_Service('172.21.12.58', 8983, '/solr/');  
-
 try  
 {  
    $solrResults = $solr->search($queryKey, 0, $limit);  
@@ -124,18 +123,18 @@ $colu2=array("p:c");
 	//$html_dom = new HtmlParser\Parser( $testa[0] ->columns["f:cnt"] ->value );
 //echo var_dump($rawKey);
 
-echo microtime_float()."<br>";
+if($debugTs) echo microtime_float()."<br>";
 foreach ($rawKey as $rawk){
 	//echo "<br>-------------<br>";
-echo "1: start search hbase DB.--------------".microtime_float()."<br>";
+if($debugTs) echo "1: start search hbase DB.--------------".microtime_float()."<br>";
 	$testa = $client->getRow($tableName,$rawk);
 	$rawkTs = $testa[0]->columns['f:cnt']->timestamp;
 	$testFcnt = $testa[0]->columns['f:cnt']->value;
 	$testb=iconv("GB2312", "UTF-8", $testFcnt);
-echo "2: start HtmlParser object.------------".microtime_float()."<br>";
+if($debugTs) echo "2: start HtmlParser object.------------".microtime_float()."<br>";
 	$html_dom = new HtmlParser\Parser( $testb );
 
-echo "3: start find title in HtmlParser------".microtime_float()."<br>";
+if($debugTs) echo "3: start find title in HtmlParser------".microtime_float()."<br>";
 	$p_title = $html_dom -> find('title',0);
 //echo "<a href=index.php?ts=$rawkTs>".iconv("UTF-8", "GB2312", $p_title->getPlainText())."</a><br>";
 echo "<a href=index.php?ts=$rawkTs>".$p_title->getPlainText()."</a><br>";
@@ -144,7 +143,7 @@ echo "<a href=index.php?ts=$rawkTs>".$p_title->getPlainText()."</a><br>";
 //echo "<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>";
 
 if ( $tsUrl == $rawkTs ){
-	echo "4: start find mcontert in HtmlParser---".microtime_float()."<br>";
+	if($debugTs) echo "4: start find mcontert in HtmlParser---".microtime_float()."<br>";
 	$pNum = 0;
 	echo "<a name='tips'><table border='1' bgcolor='PaleGreen'><tr><td>";
 	while( $p_mcontent = $html_dom -> find('div#mcontent p',$pNum) ){
@@ -157,7 +156,7 @@ if ( $tsUrl == $rawkTs ){
 }
 }
 
-echo microtime_float()."<br>";
+if($debugTs) echo microtime_float()."<br>";
 exit(0);
 
 
