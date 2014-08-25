@@ -1,7 +1,7 @@
 <?php  
 //header("Content-Type: text/html; charset=gb2312");
 header("Content-Type: text/html; charset=utf-8");
-$debugTs = true;
+$debugTs = false;
 if($debugTs) echo microtime_float()."<br>";
 ini_set('display_errors', E_ALL);  
 $GLOBALS['THRIFT_ROOT'] = './libs';  
@@ -24,7 +24,7 @@ $client = new HbaseClient($protocol);
   
 $transport->open();  
 
-$limit = 10;
+$limit = 20;
 $queryKey = "title:专业";
 $tsUrl = isset($_GET['ts']) ? $_GET['ts'] : false;  
 $solr = new Apache_Solr_Service('172.21.12.58', 8983, '/solr/');  
@@ -119,30 +119,34 @@ $colu2=array("p:c");
 //echo var_dump($scan)."<br>";
 //$testa = $client->scannerOpenWithScan($tableName,$scan);
 //$attss = $client->scannerGetList($testa,10);
-//$testb=iconv("UTF-8","GB2312//IGNORE",var_dump($testa));
-	//$html_dom = new HtmlParser\Parser( $testa[0] ->columns["f:cnt"] ->value );
 //echo var_dump($rawKey);
 
+//	$testa = $client->getRow($tableName,$rawKey[3]);
+//	echo var_dump($testa[0]->columns);
+	//echo var_dump($testa[0]->columns['p:sig']->value);
+//exit(0);
 if($debugTs) echo microtime_float()."<br>";
 foreach ($rawKey as $rawk){
 	//echo "<br>-------------<br>";
 if($debugTs) echo "1: start search hbase DB.--------------".microtime_float()."<br>";
 	$testa = $client->getRow($tableName,$rawk);
-	$rawkTs = $testa[0]->columns['f:cnt']->timestamp;
+	//$rawkTs = $testa[0]->columns['f:cnt']->timestamp;
+	$urlKey = $testa[0]->columns['f:bas']->value;
+	$rawkTs = substr(md5($urlKey), 23);
 	$testFcnt = $testa[0]->columns['f:cnt']->value;
 	$testb=iconv("GB2312", "UTF-8", $testFcnt);
-if($debugTs) echo "2: start HtmlParser object.------------".microtime_float()."<br>";
-	$html_dom = new HtmlParser\Parser( $testb );
 
 if($debugTs) echo "3: start find title in HtmlParser------".microtime_float()."<br>";
-	$p_title = $html_dom -> find('title',0);
+	$p_title = $testa[0]->columns['p:t']->value;
 //echo "<a href=index.php?ts=$rawkTs>".iconv("UTF-8", "GB2312", $p_title->getPlainText())."</a><br>";
-echo "<a href=index.php?ts=$rawkTs>".$p_title->getPlainText()."</a><br>";
+echo "<a href=index.php?ts=$rawkTs>".$p_title."</a> -- "."<a href=$urlKey target='_blank'>".$urlKey."</a><br>";
 
 //echo iconv("UTF-8", "GB2312", $p_mcontent->getPlainText());
 //echo "<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>";
 
-if ( $tsUrl == $rawkTs ){
+if ( "$tsUrl" == "$rawkTs" ){
+	if($debugTs) echo "2: start HtmlParser object.------------".microtime_float()."<br>";
+	$html_dom = new HtmlParser\Parser( $testb );
 	if($debugTs) echo "4: start find mcontert in HtmlParser---".microtime_float()."<br>";
 	$pNum = 0;
 	echo "<a name='tips'><table border='1' bgcolor='PaleGreen'><tr><td>";
