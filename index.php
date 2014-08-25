@@ -1,7 +1,8 @@
 <?php  
-header("Content-Type: text/html; charset=gb2312");
-//header("Content-Type: text/html; charset=utf-8");
+//header("Content-Type: text/html; charset=gb2312");
+header("Content-Type: text/html; charset=utf-8");
 
+echo microtime_float()."<br>";
 ini_set('display_errors', E_ALL);  
 $GLOBALS['THRIFT_ROOT'] = './libs';  
   
@@ -24,7 +25,8 @@ $client = new HbaseClient($protocol);
 $transport->open();  
 
 $limit = 10;
-$queryKey = "title:榜首";
+$queryKey = "title:专业";
+$tsUrl = isset($_GET['ts']) ? $_GET['ts'] : false;  
 $solr = new Apache_Solr_Service('172.21.12.58', 8983, '/solr/');  
 
 try  
@@ -34,6 +36,12 @@ try
 catch (Exception $e)  
 {  
    die("<html><head><title>SEARCH EXCEPTION</title><body><pre>{$e->__toString()}</pre></body></html>");  
+}
+
+function microtime_float()
+{
+   list($usec, $sec) = explode(" ", microtime());
+   return ((float)$usec + (float)$sec);
 }
 
 //echo var_dump($solrResults);
@@ -50,9 +58,14 @@ foreach ($solrResults->response->docs as $doc ){
 		}
 	}
 }
+
+/*
 foreach ( $rawKey as $idUrl){
 	echo $idUrl."    ---<br>";
 }
+*/
+
+
 //exit(0);
 //获取表列表  
 /*
@@ -89,7 +102,6 @@ try {
 */ 
 //获取表的描述  
 //	echo var_dump( get_class_methods("HbaseClient") );
-echo "<br>-------===========================------<br>";
 //echo var_dump($solrResults);
 $colu=array("f:cnt");
 $colu2=array("p:c");
@@ -110,26 +122,63 @@ $colu2=array("p:c");
 //$attss = $client->scannerGetList($testa,10);
 //$testb=iconv("UTF-8","GB2312//IGNORE",var_dump($testa));
 	//$html_dom = new HtmlParser\Parser( $testa[0] ->columns["f:cnt"] ->value );
-echo var_dump($rawKey);
-	echo "<br>------aattss end =================-------<br>";
-	$testa = $client->getRow($tableName,$rawKey[1]);
-//echo var_dump($testa[0]->columns);
-	$testFcnt = $testa[0]->columns['f:cnt']->value;
-$testb=iconv("GB2312", "UTF-8", $testFcnt);
-$html_dom = new HtmlParser\Parser( $testb );
+//echo var_dump($rawKey);
 
-$p_title = $html_dom -> find('title',0);
-echo iconv("UTF-8", "GB2312", $p_title->getPlainText())."<br>";
+echo microtime_float()."<br>";
+foreach ($rawKey as $rawk){
+	//echo "<br>-------------<br>";
+echo "1: start search hbase DB.--------------".microtime_float()."<br>";
+	$testa = $client->getRow($tableName,$rawk);
+	$rawkTs = $testa[0]->columns['f:cnt']->timestamp;
+	$testFcnt = $testa[0]->columns['f:cnt']->value;
+	$testb=iconv("GB2312", "UTF-8", $testFcnt);
+echo "2: start HtmlParser object.------------".microtime_float()."<br>";
+	$html_dom = new HtmlParser\Parser( $testb );
+
+echo "3: start find title in HtmlParser------".microtime_float()."<br>";
+	$p_title = $html_dom -> find('title',0);
+//echo "<a href=index.php?ts=$rawkTs>".iconv("UTF-8", "GB2312", $p_title->getPlainText())."</a><br>";
+echo "<a href=index.php?ts=$rawkTs>".$p_title->getPlainText()."</a><br>";
 
 //echo iconv("UTF-8", "GB2312", $p_mcontent->getPlainText());
-$pNum = 0;
-while( $p_mcontent = $html_dom -> find('div#mcontent p',$pNum) ){
-	//echo var_dump($p_mcontent->getPlainText());
-	echo "<p>".iconv("UTF-8", "GB2312", $p_mcontent->getPlainText())."</p>";
-	$pNum++;
+//echo "<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>";
+
+if ( $tsUrl == $rawkTs ){
+	echo "4: start find mcontert in HtmlParser---".microtime_float()."<br>";
+	$pNum = 0;
+	echo "<a name='tips'><table border='1' bgcolor='PaleGreen'><tr><td>";
+	while( $p_mcontent = $html_dom -> find('div#mcontent p',$pNum) ){
+		//echo var_dump($p_mcontent->getPlainText());
+		//echo "<p>".iconv("UTF-8", "GB2312", $p_mcontent->getPlainText())."</p>";
+		echo "<p>".$p_mcontent->getPlainText()."</p>";
+		$pNum++;
+	}
+	echo '</td></tr></table></a>';
+}
 }
 
+echo microtime_float()."<br>";
 exit(0);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 foreach ( $rawKey as $idU){
 	$testa = $client->getRow($tableName,$idU);  
 	//echo "<br>". $testa[0] ->columns["f:cnt"] ->value ;
