@@ -1,6 +1,13 @@
 <link rel="stylesheet" type="text/css" href="normalize.css">
 <link rel="stylesheet" type="text/css" href="demo.css">
 <link rel="stylesheet" type="text/css" href="component.css">
+<br>
+<form  accept-charset="utf-8" method="get">  
+      <label for="q">Search:</label>  
+      <input id="q" name="q" type="text" value="<?php echo htmlspecialchars($query, ENT_QUOTES, 'utf-8'); ?>"/>  
+      <input type="submit"/>  
+</form>
+
 <?php  
 //header("Content-Type: text/html; charset=gb2312");
 header("Content-Type: text/html; charset=utf-8");
@@ -27,8 +34,13 @@ $client = new HbaseClient($protocol);
   
 $transport->open();  
 
+$query = isset($_REQUEST['q']) ? $_REQUEST['q'] : false;
 $limit = 40;
 $queryKey = "title:专业";
+if ($query){
+	$queryKey = $query;
+}
+
 $tsUrl = isset($_GET['ts']) ? $_GET['ts'] : false;  
 $solr = new Apache_Solr_Service('172.21.12.58', 8983, '/solr/');  
 try  
@@ -39,6 +51,15 @@ catch (Exception $e)
 {  
    die("<html><head><title>SEARCH EXCEPTION</title><body><pre>{$e->__toString()}</pre></body></html>");  
 }
+
+// display results  
+if ($solrResults)
+{  
+  $total = (int) $solrResults->response->numFound;  
+  $start = min(1, $total);  
+  $end = min($limit, $total);  
+}  
+echo "<div>Results  $start - $end  of $total </div>";
 
 function microtime_float()
 {
@@ -73,7 +94,10 @@ foreach ($rawKey as $rawk){
 	if($debugTs) echo "3: start find title in HtmlParser------".microtime_float()."<br>";
 	$p_title = $testa[0]->columns['p:t']->value;
 	echo "<div class='container'><section class='link-braces'>";
-	echo "<a name=$rawkTs href=index.php?ts=$rawkTs#$rawkTs>".$p_title."</a> <br>&nbsp&nbsp&nbsp&nbsp&nbsp -- "."<a href=$urlKey target='_blank'>".$urlKey."</a><br>";
+	if( $query )
+		echo "<a name=$rawkTs href=index.php?ts=$rawkTs&q=$query#$rawkTs>".$p_title."</a> <br>&nbsp&nbsp&nbsp&nbsp&nbsp -- "."<a href=$urlKey target='_blank'>".$urlKey."</a><br>";
+	else
+		echo "<a name=$rawkTs href=index.php?ts=$rawkTs#$rawkTs>".$p_title."</a> <br>&nbsp&nbsp&nbsp&nbsp&nbsp -- "."<a href=$urlKey target='_blank'>".$urlKey."</a><br>";
 	echo "</section></div>";
 
 
