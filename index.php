@@ -1,3 +1,6 @@
+<link rel="stylesheet" type="text/css" href="normalize.css">
+<link rel="stylesheet" type="text/css" href="demo.css">
+<link rel="stylesheet" type="text/css" href="component.css">
 <?php  
 //header("Content-Type: text/html; charset=gb2312");
 header("Content-Type: text/html; charset=utf-8");
@@ -24,7 +27,7 @@ $client = new HbaseClient($protocol);
   
 $transport->open();  
 
-$limit = 20;
+$limit = 40;
 $queryKey = "title:专业";
 $tsUrl = isset($_GET['ts']) ? $_GET['ts'] : false;  
 $solr = new Apache_Solr_Service('172.21.12.58', 8983, '/solr/');  
@@ -69,17 +72,22 @@ foreach ($rawKey as $rawk){
 
 	if($debugTs) echo "3: start find title in HtmlParser------".microtime_float()."<br>";
 	$p_title = $testa[0]->columns['p:t']->value;
-	echo "<a href=index.php?ts=$rawkTs>".$p_title."</a> -- "."<a href=$urlKey target='_blank'>".$urlKey."</a><br>";
+	echo "<div class='container'><section class='link-braces'>";
+	echo "<a href=index.php?ts=$rawkTs>".$p_title."</a> <br>&nbsp&nbsp&nbsp&nbsp&nbsp -- "."<a href=$urlKey target='_blank'>".$urlKey."</a><br>";
+	echo "</section></div>";
 
 
 	if ( "$tsUrl" == "$rawkTs" ){
+		echo "&nbsp&nbsp&nbsp&nbsp<a href=index.php>返回</a><br>";
 		if($debugTs) echo "2: start HtmlParser object.------------".microtime_float()."<br>";
 		$html_dom = new HtmlParser\Parser( $testb );
 		if($debugTs) echo "4: start find mcontert in HtmlParser---".microtime_float()."<br>";
 
 		$pNum = 0;
 		echo "<a name='tips'><table border='1' bgcolor='PaleGreen'><tr><td>";
+		//eregi
 		while( $p_mcontent = $html_dom -> find('div#mcontent',$pNum) ){
+	//		echo var_dump($p_mcontent)."<br>";
 			echo "<p>".$p_mcontent->getPlainText()."</p>";
 			$pNum++;
 		}
