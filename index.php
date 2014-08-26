@@ -73,7 +73,7 @@ foreach ($rawKey as $rawk){
 	if($debugTs) echo "3: start find title in HtmlParser------".microtime_float()."<br>";
 	$p_title = $testa[0]->columns['p:t']->value;
 	echo "<div class='container'><section class='link-braces'>";
-	echo "<a href=index.php?ts=$rawkTs>".$p_title."</a> <br>&nbsp&nbsp&nbsp&nbsp&nbsp -- "."<a href=$urlKey target='_blank'>".$urlKey."</a><br>";
+	echo "<a name=$rawkTs href=index.php?ts=$rawkTs#$rawkTs>".$p_title."</a> <br>&nbsp&nbsp&nbsp&nbsp&nbsp -- "."<a href=$urlKey target='_blank'>".$urlKey."</a><br>";
 	echo "</section></div>";
 
 
