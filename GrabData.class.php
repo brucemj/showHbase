@@ -31,6 +31,9 @@ class GrabData {
 	public static $PageFcntUtf8 = array();        // 时间调试开关
 	
 	public static $UlrQuery =  false;
+
+	public static $PageTitleArray =  array();     // 保存page 标题和url 的二维数组，数组下标为url的hash值
+	public static $PageContentArray =  array();     // 保存page 内容 的一维数组，数组下标为url的hash值
 	
 	function __construct(){
                 self::ThriftOpen();
@@ -75,7 +78,7 @@ class GrabData {
                 }
         }
 
-	public function HbaseSetRawId(){
+	public function SetHbaseRawId(){
                 if (self::$SolrResults){
                         foreach (self::$SolrResults->response->docs as $docs ){
                                 foreach ($docs as $field => $value){
@@ -88,7 +91,7 @@ class GrabData {
         }
 
         public function HbaseGetPageList(){
-		$this -> HbaseSetRawId();
+		$this -> SetHbaseRawId();
 		$this -> SolrSummary();
                 foreach (self::$HbaseRawId as $rawId){
                         if(self::$debugTs) echo "<br> start search hbase DB for title.--------------".self::microtime_float()."<br>";
@@ -115,8 +118,9 @@ class GrabData {
 
 	public function PageDatashow($rawId){
 			$tsHash = substr(md5($rawId), 23);
+			$aass = $_SERVER['PHP_SELF'];
 			if ( $tsHash == self::$UlrQuery ){
-				echo "&nbsp&nbsp&nbsp&nbsp<a href=index.php>返回</a><br>";
+				echo "&nbsp&nbsp&nbsp&nbsp<a href=$aass>返回</a><br>";
 				$html_dom = new HtmlParser\Parser( self::$PageFcntUtf8[$tsHash] );
 
 				$pNum = 0;
@@ -132,6 +136,34 @@ class GrabData {
 	}
 
 
+	//public static $PageTitleArray =  array();     // 保存page 标题和url 的二维数组，数组下标为url的hash值
+	//public static $PageContentArray =  array();     // 保存page 内容 的一维数组，数组下标为url的hash值
+        public function GetPageTitleArray(){
+		$this -> SetHbaseRawId();
+		self::$PageTitleArray =  array();
+                foreach (self::$HbaseRawId as $rawId){
+			// 字符串变量 rawId 的值为web页面原始url的倒序值，可作为hbase查询使用。
+                        $idHash = substr(md5($rawId), 23);  // rawId字符串hash值的后九位，用来做数组下标。
+			
+			// 通过rawId(即url)在hbase中查询，返回url对应的web页面内容数据。
+                        self::$HbaseData = self::$ThriftClient->getRow(self::$HbaseTableName,  $rawId);
+			
+			// 提取web页面内容数据中的 web原始url 字符串。 
+                        $originUrl = self::$HbaseData[0]->columns['f:bas']->value;
+
+			// 提取web页面内容数据中的 web标题 字符串。 
+			$PageTitle = self::$HbaseData[0]->columns['p:t']->value;
+
+			// 把以上所有信息保存在静态二维数组 PageTitleArray 中
+			self::$PageTitleArray[$idHash] = array(
+								"title" => $PageTitle ,
+								"url" => $originUrl ,
+								"hbase" => $rawId
+							 );
+		}
+		// 返回数组给调用者使用
+		return self::$PageTitleArray ;
+	}
 
         public static function microtime_float(){
                 list($usec, $sec) = explode(" ", microtime());
